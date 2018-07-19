@@ -1,13 +1,12 @@
 package com.netease.act.cache.configure;
 
-import com.netease.act.cache.core.redis.FastJsonSerializer;
+import com.netease.act.cache.configure.serialize.FastJsonSerializer;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -22,7 +21,7 @@ public class RedisConfig {
     String port;
 
 
-    public static final String REDISSON_ADDR_PRE="redis://";
+    public static final String REDISSON_ADDR_PRE="serialize://";
 
 
     @Bean

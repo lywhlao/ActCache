@@ -1,4 +1,4 @@
-package com.netease.act.cache.core.redis;
+package com.netease.act.cache.configure.serialize;
 
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.data.redis.serializer.RedisSerializer;

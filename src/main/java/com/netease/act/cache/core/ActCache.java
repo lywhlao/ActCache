@@ -12,11 +12,11 @@ public class ActCache implements Cache {
 
     String name;
 
-    ActivityCacheManager mCacheManager;
+    ActCacheMediator mMediator;
 
-    public ActCache(String name, ActivityCacheManager cacheManager) {
+    public ActCache(String name, ActCacheMediator mediator) {
         this.name = name;
-        this.mCacheManager = cacheManager;
+        this.mMediator = mediator;
     }
 
     @Override
@@ -26,22 +26,22 @@ public class ActCache implements Cache {
 
     @Override
     public Object getNativeCache() {
-        return this.mCacheManager;
+        return this;
     }
 
     @Override
     public ValueWrapper get(Object key) {
-        Object o = mCacheManager.get(String.valueOf(key));
+        Object o = mMediator.get(String.valueOf(key));
         return o==null?null:new SimpleValueWrapper(o);
     }
 
     @Override
     public <T> T get(Object key, Class<T> type) {
-        Object o = get(key).get();
-        if(o==null){
+        ValueWrapper vp = get(key);
+        if(vp==null){
             return null;
         }
-        return (T)o;
+        return (T)vp.get();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class ActCache implements Cache {
 
     @Override
     public void put(Object key, Object value) {
-        mCacheManager.put(key,value);
+        mMediator.put(key,value);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class ActCache implements Cache {
 
     @Override
     public void evict(Object key) {
-        mCacheManager.evict(key);
+        mMediator.evictToQueue(this.name,key);
     }
 
     @Override
