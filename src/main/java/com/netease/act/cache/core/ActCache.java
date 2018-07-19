@@ -1,4 +1,4 @@
-package com.netease.act.cache;
+package com.netease.act.cache.core;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by hzlaojiaqi on 2017/11/28.
  */
-public class ActCache implements Cache{
+public class ActCache implements Cache {
 
     String name;
 

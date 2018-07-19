@@ -1,11 +1,10 @@
-package com.netease.act.cache;
+package com.netease.act.cache.core;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
 import com.netease.act.cache.util.LoggerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -72,6 +71,7 @@ public class ActivityCacheManager extends AbstractCacheManager {
     }
 
     public void evict(Object key) {
+        //TODO
         mRedis.delete(String.valueOf(key));
     }
 

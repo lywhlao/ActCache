@@ -1,4 +1,4 @@
-package com.netease.act.cache;
+package com.netease.act.cache.core;
 
 import com.google.common.cache.CacheLoader;
 import com.google.common.util.concurrent.ListenableFuture;

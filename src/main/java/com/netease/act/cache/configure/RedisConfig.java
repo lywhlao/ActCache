@@ -1,18 +1,16 @@
 package com.netease.act.cache.configure;
 
+import com.netease.act.cache.core.redis.FastJsonSerializer;
 import org.redisson.Redisson;
-import org.redisson.RedissonNode;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
-import org.redisson.config.RedissonNodeConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.util.StringUtils;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
@@ -36,6 +34,17 @@ public class RedisConfig {
         return Redisson.create(config);
     }
 
+
+    @Bean
+    public RedisTemplate<String, Object> stringStringRedisTemplate(JedisConnectionFactory jedisConnectionFactory){
+        RedisTemplate<String,Object> redisTemplate=new RedisTemplate<String, Object>();
+        redisTemplate.setConnectionFactory(jedisConnectionFactory);
+        redisTemplate.setDefaultSerializer(new FastJsonSerializer());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.afterPropertiesSet();
+        return  redisTemplate;
+    }
 
 
 }
