@@ -13,10 +13,16 @@ public class WebController {
     CacheService cacheService;
 
 
-//    http://localhost:8500/
-    @RequestMapping("/")
+//    http://localhost:8500/put
+    @RequestMapping("/put")
     public Object test(@RequestParam(defaultValue = "laojiaqi") String value){
         return cacheService.test(value);
+    }
+
+    //    http://localhost:8500/evict
+    @RequestMapping("/evict")
+    public Object evict(@RequestParam(defaultValue = "laojiaqi") String value){
+        return cacheService.evict(value);
     }
 
 }

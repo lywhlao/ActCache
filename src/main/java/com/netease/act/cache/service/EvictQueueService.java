@@ -30,13 +30,13 @@ public class EvictQueueService implements InitializingBean {
         }
     }
 
-    public EvictBO get() {
+    public EvictBO get() throws InterruptedException {
         try {
             return mQueue.take();
         } catch (InterruptedException e) {
             log.error("queue take error", e);
+            throw e;
         }
-        return null;
     }
 
 

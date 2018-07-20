@@ -8,6 +8,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,11 +25,13 @@ public class DiscoverService implements InitializingBean {
 
     PathChildrenCache pcc;
 
+    @Autowired
+    ZKService mZKService;
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        zkc = CuratorFrameworkFactory.newClient("10.242.1.219:2181",
-                new ExponentialBackoffRetry(1000, 3));
-        zkc.start();
+
+        zkc=mZKService.getZKClient();
 
         initTaskDir(zkc);
 
@@ -62,4 +65,6 @@ public class DiscoverService implements InitializingBean {
             log.error("initTaskDir error", e);
         }
     }
+
+
 }

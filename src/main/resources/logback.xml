@@ -51,6 +51,6 @@
 	<root level="INFO">
 		<!--<appender-ref ref="stdout" />-->
 		<!--<appender-ref ref="stderr" />-->
-		<!--<appender-ref ref="Consol" />-->
+		<appender-ref ref="Consol" />
 	</root>
 </configuration>
