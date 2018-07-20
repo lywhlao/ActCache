@@ -1,6 +1,7 @@
 package com.netease.act.cache.core;
 
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.netease.act.cache.bean.CacheContext;
 import com.netease.act.cache.bean.EvictBO;
@@ -10,6 +11,7 @@ import com.netease.act.cache.util.LoggerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,9 +26,11 @@ public class ActCacheMediator implements InitializingBean {
 
     public static final int DURATION = 10;
 
+    @Autowired
     RedisTemplate<String, Object> mRedis;
 
-    LoadingCache<String, Object> mLocalCache;
+    ActivityCacheManager mCacheManager;
+
 
     @Autowired
     EvictQueueService mQueue;
@@ -34,12 +38,12 @@ public class ActCacheMediator implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        initLocalCache();
     }
 
 
     /**
-    *  消除key，通过队列统一调度
+     * 消除key，通过队列统一调度
+     *
      * @param cacheNme
      * @param key
      */
@@ -55,62 +59,83 @@ public class ActCacheMediator implements InitializingBean {
     }
 
 
-    public Object get(String key) {
+    /**
+    * get  value from local cache and redis cache
+     * @param cacheName
+     * @param key
+     * @return
+     */
+    public Object get(String cacheName, String key) {
         if (StringUtils.isEmpty(key)) {
             return null;
         }
-        Object result = null;
         try {
-            result = mLocalCache.get(key);
-            LoggerUtil.debug(log, "ActCacheMediator local cache get key:{},result:{}", key, result);
+            return mCacheManager.getCacheByName(cacheName).getLoadingCache().getUnchecked(key);
         } catch (Exception e) {
             LoggerUtil.error(log, "ActCacheMediator get null value exception", e);
         }
-        return result;
+        return null;
     }
 
-    public void put(String cacheName,String key,String value) {
-        if (StringUtils.isEmpty(key)) {
-            return null;
+
+    /**
+    *
+    *  put value to double cache
+     * @param cacheName
+     * @param key
+     * @param value
+     */
+    public void put(String cacheName, Object key, Object value) {
+        if (StringUtils.isEmpty(cacheName) || key == null) {
+            return;
         }
-        Object result = null;
         try {
-            result = mLocalCache.get(key);
-            LoggerUtil.debug(log, "ActCacheMediator local cache get key:{},result:{}", key, result);
+            //add to redis
+            mRedis.opsForValue().set(getKey(cacheName, key), value);
+            //add to local cache
+            mCacheManager.getCacheByName(cacheName).getLoadingCache().put(key, value);
+            LoggerUtil.debug(log, "ActCacheMediator local cache get key:{},value:{}", key);
         } catch (Exception e) {
             LoggerUtil.error(log, "ActCacheMediator get null value exception", e);
         }
-        return result;
     }
 
-
-
-
-
-    public void clearLocalAndRemoteCache(String cache){
+    public void clearLocalAndRemoteCache(String cache) {
 
 
     }
 
 
-    public CacheContext getCacheBuilder(){
-        CacheBuilder cacheBuilder = CacheBuilder.newBuilder().refreshAfterWrite(10,TimeUnit.SECONDS);
+    /**
+     * @return
+     */
+    public CacheContext getCacheBuilder() {
+        CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.newBuilder()
+                                                                .maximumSize(MAXIMUM_SIZE)
+                                                                .refreshAfterWrite(DURATION, TimeUnit.SECONDS);
+        CacheContext cacheContext = CacheContext.builder()
+                                                .cacheBuilder(cacheBuilder)
+                                                .build();
 
+        return cacheContext;
     }
 
+    public CacheLoader<Object, Object> getCacheLoad(String cacheName) {
+        return new RefreshAsyncCacheLoader<Object, Object>() {
 
-    private void initLocalCache() {
-        mLocalCache = CacheBuilder
-                .newBuilder()
-                .maximumSize(MAXIMUM_SIZE)
-                .refreshAfterWrite(DURATION, TimeUnit.SECONDS)
-                .build(new RefreshAsyncCacheLoader<String, Object>() {
-                    @Override
-                    public Object load(String key) throws Exception {
-                        Object o = mRedis.opsForValue().get(key);
-                        return o;
-                    }
-                });
+                @Override
+                public Object load(Object key) throws Exception {
+                    Object o = mRedis.opsForValue().get(getKey(cacheName,key));
+                    return o;
+                }
+            };
     }
 
+    public void setCacheManager(ActivityCacheManager mCacheManager) {
+        this.mCacheManager = mCacheManager;
+    }
+
+    private String getKey(String cacheName, Object key) {
+        return "act:cacheName:" + cacheName + "_" + key;
+    }
 }

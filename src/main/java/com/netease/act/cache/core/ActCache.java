@@ -1,5 +1,7 @@
 package com.netease.act.cache.core;
 
+import com.google.common.cache.LoadingCache;
+import lombok.Data;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
 
@@ -14,9 +16,17 @@ public class ActCache implements Cache {
 
     ActCacheMediator mMediator;
 
+    LoadingCache<Object, Object> mLoadingCache;
+
     public ActCache(String name, ActCacheMediator mediator) {
         this.name = name;
         this.mMediator = mediator;
+    }
+
+    public ActCache(String name, ActCacheMediator mMediator, LoadingCache<Object, Object> mLoadingCache) {
+        this.name = name;
+        this.mMediator = mMediator;
+        this.mLoadingCache = mLoadingCache;
     }
 
     @Override
@@ -31,7 +41,7 @@ public class ActCache implements Cache {
 
     @Override
     public ValueWrapper get(Object key) {
-        Object o = mMediator.get(String.valueOf(key));
+        Object o = mMediator.get(this.name,String.valueOf(key));
         return o==null?null:new SimpleValueWrapper(o);
     }
 
@@ -52,12 +62,13 @@ public class ActCache implements Cache {
 
     @Override
     public void put(Object key, Object value) {
-        mMediator.put(key,value);
+        mMediator.put(name,key,value);
     }
 
     @Override
     public ValueWrapper putIfAbsent(Object key, Object value) {
-        return new SimpleValueWrapper(mCacheManager.putIfAbsent(key,value));
+//        return new SimpleValueWrapper(mCacheManager.putIfAbsent(key,value));
+        return null;
     }
 
     @Override
@@ -69,4 +80,10 @@ public class ActCache implements Cache {
     public void clear() {
 
     }
+
+    public LoadingCache<Object, Object> getLoadingCache() {
+        return mLoadingCache;
+    }
+
+
 }

@@ -15,7 +15,4 @@ public class CacheContext {
 
      CacheBuilder<Object, Object> cacheBuilder;
 
-     CacheLoader<Object, Object> cacheLoader;
-
-
 }
