@@ -16,10 +16,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
 public class ActCacheMediator implements InitializingBean {
 
     public static final int MAXIMUM_SIZE = 5210;
@@ -31,10 +31,8 @@ public class ActCacheMediator implements InitializingBean {
 
     ActivityCacheManager mCacheManager;
 
-
     @Autowired
     EvictQueueService mQueue;
-
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -53,9 +51,28 @@ public class ActCacheMediator implements InitializingBean {
         EvictBO evictBO = EvictBO.builder()
                                  .key(keyStr)
                                  .cacheName(cacheNme)
+                                 .uuid(UUID.randomUUID().toString())
                                  .build();
 
         mQueue.put(evictBO);
+    }
+
+    /**
+     * evict cache
+     *
+     * 1. local cache
+     * 2. redis cache
+     *
+     * @param cacheName
+     * @param key
+     */
+    public void evictByCacheName(String cacheName,Object key){
+        ExpUtil.check(key!=null);
+        ActCache cacheByName = mCacheManager.getCacheByName(cacheName);
+        ExpUtil.check(cacheByName!=null);
+        cacheByName.getLoadingCache().invalidate(key);
+        String redisKey=getKey(cacheName, key);
+        mRedis.delete(redisKey);
     }
 
 

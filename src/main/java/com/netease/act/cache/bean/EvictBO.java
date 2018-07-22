@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class EvictBO {
 
+    String uuid;
+
     String cacheName;
 
     String key;

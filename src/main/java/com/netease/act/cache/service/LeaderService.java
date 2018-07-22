@@ -1,6 +1,5 @@
 package com.netease.act.cache.service;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netease.act.cache.bean.EvictBO;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,9 @@ public class LeaderService implements InitializingBean{
     @Autowired
     EvictQueueService mQueue;
 
+    @Autowired
+    PublishService mPublish;
+
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -36,24 +38,42 @@ public class LeaderService implements InitializingBean{
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                LeaderSelector leaderSelector=new LeaderSelector(mZKService.getZKClient(), "/act_cahe_leader", new LeaderSelectorListenerAdapter() {
-                    @Override
-                    public void takeLeadership(CuratorFramework client) throws Exception {
-                        while (true){
-                            EvictBO evictBO = mQueue.get();
-                            if(evictBO!=null){
-                                log.info("leader get queue ==>{}",evictBO);
-                            }
-                        }
-                    }
-                });
-                leaderSelector.start();
+                try {
+                    doLeaderWork();
+                } catch (InterruptedException e) {
+                  log.error("leader interrupted ",e);
+                }
             }
         });
     }
 
+
+    private void doLeaderWork() throws InterruptedException {
+        LeaderSelector leaderSelector=new LeaderSelector(mZKService.getZKClient(), "/act_cache_leader", new LeaderSelectorListenerAdapter() {
+            @Override
+            public void takeLeadership(CuratorFramework client) throws Exception {
+//                // register ack
+//                mPublish.registerAckTopic();
+
+                // broadcast to client
+                getMessageFromEvictQueue();
+            }
+        });
+        leaderSelector.start();
+    }
+
+    private void getMessageFromEvictQueue() throws InterruptedException {
+        while (true){
+            EvictBO evictBO = mQueue.get();
+            if(evictBO!=null){
+                log.info("leader get evict queue ==>{}",evictBO);
+                mPublish.sendBroadcast(evictBO);
+            }
+        }
+    }
+
     @PreDestroy
-    public void destory(){
+    public void destroy(){
         MoreExecutors.shutdownAndAwaitTermination(mExecutor,20, TimeUnit.SECONDS);
     }
 }
