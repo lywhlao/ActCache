@@ -45,7 +45,7 @@
 		<level value="INFO" />
 		<appender-ref ref="stdout" />
 		<appender-ref ref="stderr" />
-		<appender-ref ref="Consol" />
+		<!--<appender-ref ref="Consol" />-->
 	</logger>
 
 	<root level="INFO">

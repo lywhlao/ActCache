@@ -1,9 +1,9 @@
 package com.netease.act.cache.service;
 
+import ch.qos.logback.core.util.TimeUtil;
 import com.netease.act.cache.bean.EvictBO;
 import com.netease.act.cache.constant.RedisKey;
 import com.netease.act.cache.core.ActCacheMediator;
-import com.netease.act.cache.core.ActivityCacheManager;
 import com.netease.act.cache.util.ExpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RTopic;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Random;
 
 @Service
 @Slf4j
@@ -24,19 +25,20 @@ public class PublishService {
     @Autowired
     ActCacheMediator mMediator;
 
-    private RTopic<EvictBO> mEvictTopic;
+    @Autowired
+    QueueService mQueue;
 
-    private RTopic<EvictBO> mAckTopic;
+    private RTopic<EvictBO> mEvictTopic;
 
     @PostConstruct
     public void init() {
-//        mAckTopic = mRClient.getTopic(RedisKey.ACK_EVICT_TOPIC);
         mEvictTopic = mRClient.getTopic(RedisKey.BROADCAST_EVICT_TOPIC);
         mEvictTopic.addListener(new MessageListener<EvictBO>() {
             @Override
             public void onMessage(String channel, EvictBO msg) {
-                log.info("get broadcast ==>{}", msg);
-                mMediator.evictByCacheName(msg.getCacheName(),msg.getKey());
+                msg.setIp("127.0.0.1==>"+System.currentTimeMillis());
+                mQueue.putToAck(msg);
+                log.info("client send ack msg==>:{}",msg);
             }
         });
     }
@@ -45,18 +47,5 @@ public class PublishService {
         ExpUtil.check(evictBO != null);
         mEvictTopic.publish(evictBO);
     }
-
-    /**
-     * //todo ack
-     */
-    public void registerAckTopic() {
-        mAckTopic.addListener(new MessageListener<EvictBO>() {
-            @Override
-            public void onMessage(String s, EvictBO evictBO) {
-
-            }
-        });
-    }
-
 
 }

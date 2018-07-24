@@ -1,6 +1,8 @@
 package com.netease.act.cache.core;
 
 import com.google.common.cache.LoadingCache;
+import com.netease.act.cache.bean.NullObject;
+import com.netease.act.cache.bean.excpetion.ActNotSupportException;
 import lombok.Data;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
@@ -56,8 +58,8 @@ public class ActCache implements Cache {
 
     @Override
     public <T> T get(Object key, Callable<T> valueLoader) {
-        //TOdo
-        return null;
+        T t = mMediator.get(this.name, key, valueLoader);
+        return t;
     }
 
     @Override
@@ -67,8 +69,8 @@ public class ActCache implements Cache {
 
     @Override
     public ValueWrapper putIfAbsent(Object key, Object value) {
-//        return new SimpleValueWrapper(mCacheManager.putIfAbsent(key,value));
-        return null;
+        // local cache and redis can not be in same transaction
+        throw new ActNotSupportException();
     }
 
     @Override
@@ -78,7 +80,7 @@ public class ActCache implements Cache {
 
     @Override
     public void clear() {
-
+      //Todo
     }
 
     public LoadingCache<Object, Object> getLoadingCache() {

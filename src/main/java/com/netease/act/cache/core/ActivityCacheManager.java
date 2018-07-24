@@ -63,6 +63,8 @@ public class ActivityCacheManager extends AbstractCacheManager {
 
     public ActCache getCacheByName(String cacheName) {
         Cache cache = getCache(cacheName);
+        //todo why is false?
+//        ExpUtil.check(ActCache.class.getClass().isInstance(cache));
         return (ActCache) cache;
     }
 
