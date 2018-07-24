@@ -2,6 +2,7 @@ package com.netease.act.cache.service;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netease.act.cache.bean.EvictBO;
+import com.netease.act.cache.constant.Constant;
 import com.netease.act.cache.core.ActCacheMediator;
 import com.netease.act.cache.util.thread.ThreadPoolUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -133,7 +134,8 @@ public class LeaderService implements InitializingBean {
     private void compareAndEvict(EvictBO fromAck, int currentValue, int clientSize) {
         if (currentValue >= clientSize) {
             log.info("ack success get from queue ==>{}", fromAck);
-            mMediator.evictByCacheName(fromAck.getCacheName(), fromAck.getKey());
+            fromAck.setPhase(Constant.PHASE_COMMIT);
+            mPublish.sendBroadcast(fromAck);
             mAckMap.remove(fromAck);
         }else{
             log.info("ack not success  current:{},client:{}",currentValue,clientSize);
@@ -167,6 +169,10 @@ public class LeaderService implements InitializingBean {
                 mPublish.sendBroadcast(evictBO);
             }
         }
+    }
+
+    public boolean isLeader(){
+        return mLeaderShip!=null && mLeaderShip.hasLeadership();
     }
 
     @PreDestroy

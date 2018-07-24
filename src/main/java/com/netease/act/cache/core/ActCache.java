@@ -3,6 +3,7 @@ package com.netease.act.cache.core;
 import com.google.common.cache.LoadingCache;
 import com.netease.act.cache.bean.NullObject;
 import com.netease.act.cache.bean.excpetion.ActNotSupportException;
+import com.netease.act.cache.constant.Constant;
 import lombok.Data;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
@@ -75,7 +76,7 @@ public class ActCache implements Cache {
 
     @Override
     public void evict(Object key) {
-        mMediator.evictToQueue(this.name,key);
+        mMediator.evictToQueue(this.name, key, Constant.PHASE_BROADCAST);
     }
 
     @Override

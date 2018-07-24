@@ -2,6 +2,7 @@ package com.netease.act.cache.service;
 
 import ch.qos.logback.core.util.TimeUtil;
 import com.netease.act.cache.bean.EvictBO;
+import com.netease.act.cache.constant.Constant;
 import com.netease.act.cache.constant.RedisKey;
 import com.netease.act.cache.core.ActCacheMediator;
 import com.netease.act.cache.util.ExpUtil;
@@ -37,7 +38,12 @@ public class PublishService {
             @Override
             public void onMessage(String channel, EvictBO msg) {
                 msg.setIp("127.0.0.1==>"+System.currentTimeMillis());
-                mQueue.putToAck(msg);
+                if(msg.getPhase()==Constant.PHASE_BROADCAST) {
+                    mQueue.putToAck(msg);
+                }
+                if(msg.getPhase()==Constant.PHASE_COMMIT){
+                    mMediator.evictByCacheName(msg.getCacheName(),msg.getKey());
+                }
                 log.info("client send ack msg==>:{}",msg);
             }
         });

@@ -16,4 +16,10 @@ public class EvictBO {
     String key;
 
     String ip;
+
+    /**
+     *  1 broadcast
+     *  2 commit
+     */
+    int phase;
 }
