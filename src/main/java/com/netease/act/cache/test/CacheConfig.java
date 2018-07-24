@@ -14,14 +14,9 @@ public class CacheConfig {
 
     @Bean
     public CacheManager testCache(){
-        ActivityCacheManager manager=new ActivityCacheManager(cacheMediator());
+        ActivityCacheManager manager=new ActivityCacheManager();
         manager.setCacheSets(Sets.newHashSet("test"));
         return manager;
-    }
-
-    @Bean
-    public ActCacheMediator cacheMediator(){
-        return new ActCacheMediator();
     }
 
 }

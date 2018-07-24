@@ -89,6 +89,9 @@ public class LeaderService implements InitializingBean {
      * recheck count map if client removed
      */
     public void recheckCountMap(){
+        if(!isLeader()){
+            return;
+        }
         ThreadPoolUtil.getInstance().execute(new Runnable() {
             @Override
             public void run() {

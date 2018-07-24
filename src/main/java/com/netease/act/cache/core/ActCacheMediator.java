@@ -4,7 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.netease.act.cache.bean.CacheContext;
 import com.netease.act.cache.bean.EvictBO;
-import com.netease.act.cache.bean.NullObject;
+import com.netease.act.cache.constant.Constant;
 import com.netease.act.cache.service.LeaderService;
 import com.netease.act.cache.service.QueueService;
 import com.netease.act.cache.util.ExpUtil;
@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.UUID;
@@ -20,11 +21,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ActCacheMediator implements InitializingBean {
-
-    public static final int MAXIMUM_SIZE = 5210;
-
-    public static final int DURATION = 10;
+@Service
+public class ActCacheMediator implements InitializingBean, Constant {
 
     @Autowired
     RedisTemplate<String, Object> mRedis;
@@ -38,7 +36,7 @@ public class ActCacheMediator implements InitializingBean {
     QueueService mQueue;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet(){
     }
 
 
@@ -48,7 +46,7 @@ public class ActCacheMediator implements InitializingBean {
      * @param cacheNme
      * @param key
      */
-    public void evictToQueue(String cacheNme, Object key,int phase) {
+    public void evictToQueue(String cacheNme, Object key, int phase) {
         ExpUtil.check(key != null);
         String keyStr = String.valueOf(key);
         EvictBO evictBO = EvictBO.builder()
@@ -99,15 +97,14 @@ public class ActCacheMediator implements InitializingBean {
      * @param key
      */
     public void evictRedisByCacheName(String cacheName, Object key) {
-        if(mLeader.isLeader()) {
+        if (mLeader.isLeader()) {
             String redisKey = getKey(cacheName, key);
             mRedis.delete(redisKey);
-            log.info("leader evict ==>redis key:{}",key);
+            log.info("leader evict ==>redis key:{}", key);
             return;
         }
-        log.info("not leader doesn't evict ==> redis key:{}",key);
+        log.info("not leader doesn't evict ==> redis key:{}", key);
     }
-
 
 
     /**
@@ -189,8 +186,8 @@ public class ActCacheMediator implements InitializingBean {
      */
     public CacheContext getCacheBuilder() {
         CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.newBuilder()
-                .maximumSize(MAXIMUM_SIZE)
-                .expireAfterWrite(DURATION, TimeUnit.MINUTES);//TOdo 自动过期时间
+                .maximumSize(LOCAL_CACHE_MAXIMUM_SIZE)
+                .expireAfterWrite(LOCAL_CACHE_EXPIRE_DURATION, TimeUnit.MINUTES);//TOdo 自动过期时间
         CacheContext cacheContext = CacheContext.builder()
                 .cacheBuilder(cacheBuilder)
                 .build();

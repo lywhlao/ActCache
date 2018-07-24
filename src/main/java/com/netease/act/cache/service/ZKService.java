@@ -1,5 +1,6 @@
 package com.netease.act.cache.service;
 
+import com.netease.act.cache.constant.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -10,15 +11,14 @@ import javax.annotation.PostConstruct;
 
 @Service
 @Slf4j
-public class ZKService {
-
+public class ZKService implements Constant {
 
 
 
     @PostConstruct
     public CuratorFramework getZKClient(){
-        CuratorFramework zkc = CuratorFrameworkFactory.newClient("127.0.0.1:2181",
-                new ExponentialBackoffRetry(1000, 3));
+        CuratorFramework zkc = CuratorFrameworkFactory.newClient(ZK_ADDRESS,
+                                                                 new ExponentialBackoffRetry(1000, 3));
         try {
             zkc.start();
             zkc.getZookeeperClient().blockUntilConnectedOrTimedOut();

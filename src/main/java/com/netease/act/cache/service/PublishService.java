@@ -1,6 +1,5 @@
 package com.netease.act.cache.service;
 
-import ch.qos.logback.core.util.TimeUtil;
 import com.netease.act.cache.bean.EvictBO;
 import com.netease.act.cache.constant.Constant;
 import com.netease.act.cache.constant.RedisKey;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Random;
 
 @Service
 @Slf4j

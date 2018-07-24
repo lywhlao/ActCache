@@ -90,7 +90,11 @@ public class DiscoverService implements InitializingBean {
     }
 
 
-    public void initTaskDir(CuratorFramework zkc) {
+    /**
+     * init client root dir
+     * @param zkc
+     */
+    private void initTaskDir(CuratorFramework zkc) {
         try {
             zkc.checkExists().creatingParentContainersIfNeeded().forPath(WATCH_DIR);
         } catch (Exception e) {

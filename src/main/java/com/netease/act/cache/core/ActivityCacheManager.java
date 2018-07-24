@@ -5,6 +5,7 @@ import com.google.common.cache.LoadingCache;
 import com.netease.act.cache.bean.CacheContext;
 import com.netease.act.cache.util.ExpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.guava.GuavaCache;
 import org.springframework.cache.support.AbstractCacheManager;
@@ -21,6 +22,7 @@ import java.util.Set;
 public class ActivityCacheManager extends AbstractCacheManager {
 
 
+    @Autowired
     private ActCacheMediator mediator;
 
     private Set<String> cacheSets;
@@ -28,6 +30,9 @@ public class ActivityCacheManager extends AbstractCacheManager {
 
     public ActivityCacheManager(ActCacheMediator mediator) {
         this.mediator = mediator;
+    }
+
+    public ActivityCacheManager() {
     }
 
     public void setCacheSets(Set<String> cacheNames) {

@@ -1,6 +1,7 @@
 package com.netease.act.cache.service;
 
 import com.netease.act.cache.bean.EvictBO;
+import com.netease.act.cache.constant.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.InitializingBean;
@@ -11,12 +12,7 @@ import java.util.concurrent.BlockingDeque;
 
 @Service
 @Slf4j
-public class QueueService implements InitializingBean {
-
-
-    public static final String ACT_CACHE_EVICT_QUEUE = "act_cache_evict_queue";
-
-    public static final String ACT_CACHE_ACK_QUEUE = "act_cache_ack_queue";
+public class QueueService implements InitializingBean,Constant {
 
     @Autowired
     RedissonClient mRedis;
@@ -24,6 +20,14 @@ public class QueueService implements InitializingBean {
     public BlockingDeque<EvictBO> mEvictQueue;
 
     public BlockingDeque<EvictBO> mAckQueue;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        mEvictQueue = mRedis.getBlockingDeque(ACT_CACHE_EVICT_QUEUE);
+
+        mAckQueue = mRedis.getBlockingDeque(ACT_CACHE_ACK_QUEUE);
+    }
 
 
     public void putToEvict(EvictBO bo) {
@@ -59,14 +63,5 @@ public class QueueService implements InitializingBean {
         } catch (InterruptedException e) {
             log.error("queue put error", e);
         }
-    }
-
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
-        mEvictQueue = mRedis.getBlockingDeque(ACT_CACHE_EVICT_QUEUE);
-
-        mAckQueue = mRedis.getBlockingDeque(ACT_CACHE_ACK_QUEUE);
     }
 }
