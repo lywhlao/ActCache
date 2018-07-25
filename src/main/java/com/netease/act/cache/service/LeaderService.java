@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.netease.act.cache.bean.EvictBO;
 import com.netease.act.cache.constant.Constant;
 import com.netease.act.cache.core.ActCacheMediator;
+import com.netease.act.cache.util.thread.CustomThreadFactory;
 import com.netease.act.cache.util.thread.ThreadPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -23,14 +24,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
-public class LeaderService implements InitializingBean {
+public class LeaderService implements InitializingBean,Constant{
 
 
-    public static final String ACT_CACHE_LEADER = "/act_cache_leader";
+    ExecutorService mExecutor = Executors.newSingleThreadExecutor(CustomThreadFactory.getInstance());
 
-    ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-
-    ExecutorService mAckExecutor = Executors.newSingleThreadExecutor();
+    ExecutorService mAckExecutor = Executors.newSingleThreadExecutor(CustomThreadFactory.getInstance());
 
 
     @Autowired
@@ -181,5 +180,6 @@ public class LeaderService implements InitializingBean {
     @PreDestroy
     public void destroy() {
         MoreExecutors.shutdownAndAwaitTermination(mExecutor, 20, TimeUnit.SECONDS);
+        MoreExecutors.shutdownAndAwaitTermination(mAckExecutor,20,TimeUnit.SECONDS);
     }
 }

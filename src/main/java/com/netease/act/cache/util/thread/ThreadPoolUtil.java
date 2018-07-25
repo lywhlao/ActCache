@@ -11,10 +11,6 @@ import java.util.concurrent.Future;
  */
 public class ThreadPoolUtil {
 
-    private ThreadPoolUtil() {
-
-    }
-
     public static void execute(Runnable runnable){
         getInstance().execute(runnable);
     }
@@ -24,7 +20,7 @@ public class ThreadPoolUtil {
 
     private static class InstanceHolder{
         private static ExecutorService executorService= Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors() * 3,new CustomThreadFactory());
+                Runtime.getRuntime().availableProcessors() * 3,CustomThreadFactory.getInstance());
     }
 
     public static ExecutorService getInstance(){

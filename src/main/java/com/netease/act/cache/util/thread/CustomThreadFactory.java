@@ -13,7 +13,7 @@ public class CustomThreadFactory implements ThreadFactory {
 
     private AtomicInteger threadNum=new AtomicInteger(0);
 
-    private static final String THREAD_NAME_PREFIX="act_thread_member_";
+    private static final String THREAD_NAME_PREFIX="act_cache_thread_member_";
 
     private final Thread.UncaughtExceptionHandler handler=new CustomExceptionHandler();
 
@@ -24,5 +24,20 @@ public class CustomThreadFactory implements ThreadFactory {
         thread.setUncaughtExceptionHandler(handler);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private CustomThreadFactory(){
+
+    }
+
+    public static CustomThreadFactory getInstance(){
+        return CustomThreadFactoryHolder.getInstance();
+    }
+
+    public static class CustomThreadFactoryHolder{
+        private static CustomThreadFactory instance=new CustomThreadFactory();
+        public static CustomThreadFactory getInstance(){
+            return instance;
+        }
     }
 }

@@ -101,9 +101,7 @@ public class ActCacheMediator implements InitializingBean, Constant {
             String redisKey = getKey(cacheName, key);
             mRedis.delete(redisKey);
             log.info("leader evict ==>redis key:{}", key);
-            return;
         }
-        log.info("not leader doesn't evict ==> redis key:{}", key);
     }
 
 
@@ -121,7 +119,7 @@ public class ActCacheMediator implements InitializingBean, Constant {
         try {
             return mCacheManager.getCacheByName(cacheName).getLoadingCache().getUnchecked(key);
         } catch (Exception e) {
-//            log.error("ActCacheMediator get null value exception", e);
+            //ignore. may be get null value for key
         }
         return null;
     }
