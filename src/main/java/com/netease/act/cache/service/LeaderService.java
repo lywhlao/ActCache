@@ -16,10 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -54,7 +51,7 @@ public class LeaderService implements InitializingBean,Constant{
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
+        initLeaderShip();
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -69,15 +66,11 @@ public class LeaderService implements InitializingBean,Constant{
             @Override
             public void run() {
                 while (true) {
-                    if (mLeaderShip == null) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                        }
-                        log.info("leader ack mleaderShip is null");
-                        continue;
+                    if(mLeaderShip.hasLeadership()){
+                        doLeaderAckWork();
+                    }else{
+                        idle();
                     }
-                    doAckWork();
                 }
             }
         });
@@ -107,23 +100,31 @@ public class LeaderService implements InitializingBean,Constant{
     /**
      * if all client ack, do evict caches(guava and redis) operation
      */
-    private void doAckWork() {
-        if (mLeaderShip.hasLeadership()) {
-            try {
-                EvictBO fromAck = mQueue.getFromAck();
-                if (fromAck != null) {
-                    AtomicInteger atomicInteger = mAckMap.putIfAbsent(fromAck, new AtomicInteger(1));
-                    int currentValue = 1;
-                    if (atomicInteger != null) {
-                        currentValue = atomicInteger.incrementAndGet();
-                    }
-                    int clientSize = mDiscoverService.getClientSize();
-                    log.info("leader get ack==> current:{},expect:{}", currentValue, clientSize);
-                    compareAndEvict(fromAck, currentValue, clientSize);
+    private void doLeaderAckWork() {
+        try {
+            EvictBO fromAck = mQueue.getFromAck();
+            if (fromAck != null) {
+                AtomicInteger atomicInteger = mAckMap.putIfAbsent(fromAck, new AtomicInteger(1));
+                int currentValue = 1;
+                if (atomicInteger != null) {
+                    currentValue = atomicInteger.incrementAndGet();
                 }
-            } catch (InterruptedException e) {
-                log.error("ack interrupted ", e);
+                int clientSize = mDiscoverService.getClientSize();
+                log.info("leader get ack==> current:{},expect:{}", currentValue, clientSize);
+                compareAndEvict(fromAck, currentValue, clientSize);
             }
+        } catch (InterruptedException e) {
+            log.error("ack interrupted ", e);
+        }
+    }
+
+    /**
+     *  is not leader ,just sleep
+     */
+    private void idle() {
+        try {
+            Thread.sleep(100L);
+        } catch (InterruptedException e) {
         }
     }
 
@@ -149,14 +150,6 @@ public class LeaderService implements InitializingBean,Constant{
      * @throws InterruptedException
      */
     private void doBroadcastWork() throws InterruptedException {
-        mLeaderShip = new LeaderSelector(mZKService.getZKClient(), ACT_CACHE_LEADER, new LeaderSelectorListenerAdapter() {
-            @Override
-            public void takeLeadership(CuratorFramework client) throws Exception {
-                log.info("leader service,  inner is leader==>{}", mLeaderShip.hasLeadership());
-                // broadcast to client
-                getMessageFromEvictQueue();
-            }
-        });
         mLeaderShip.start();
     }
 
@@ -175,6 +168,24 @@ public class LeaderService implements InitializingBean,Constant{
 
     public boolean isLeader(){
         return mLeaderShip!=null && mLeaderShip.hasLeadership();
+    }
+
+    /**
+    *  init leader ship
+     * @return
+     */
+    private LeaderSelector initLeaderShip(){
+        if(mLeaderShip==null){
+            mLeaderShip = new LeaderSelector(mZKService.getZKClient(), ACT_CACHE_LEADER, new LeaderSelectorListenerAdapter() {
+                @Override
+                public void takeLeadership(CuratorFramework client) throws Exception {
+                    log.info("leader service,  inner is leader==>{}", mLeaderShip.hasLeadership());
+                    // broadcast to client
+                    getMessageFromEvictQueue();
+                }
+            });
+        }
+        return mLeaderShip;
     }
 
     @PreDestroy

@@ -28,7 +28,9 @@ public interface Constant {
     /**
      * zookeepr address
      */
-     String ZK_ADDRESS = "127.0.0.1:2181";
+//     String ZK_ADDRESS = "127.0.0.1:2181";
+
+     String ZK_ADDRESS = "10.242.1.219:2181";
 
     /**
      *  local cache size
